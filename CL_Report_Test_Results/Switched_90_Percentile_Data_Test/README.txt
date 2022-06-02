@@ -1,1 +1,0 @@
-Results of test where misclassifications with over a 90% confidence probability had their originating folders swapped -- ex : A no file misclassified by the model with a 90%+ probability now is presented as a yes file in training data.
