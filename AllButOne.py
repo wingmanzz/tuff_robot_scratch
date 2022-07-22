@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Bethany Jackson, Scott Stewart, Ivan Echevarria, Nadia Aly, Brook Lautenslager
 # TUFF Classifier
+import random
 from datetime import datetime
 import glob
 import os
@@ -123,54 +124,66 @@ clf_lgbm = create_lgbm_cl()
 
 all_files = glob.glob('aug_collection/aug_addition/**/*.txt', recursive=True)
 print(len(all_files))
+train = load_files(full_train_folder, description=None, categories=None, load_content=True, shuffle=False,
+                   encoding=None,
+                   decode_error='strict', random_state=0)
 try:
-    for i in (range(20, len(all_files)+1,20)):
-        now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
+    for i in (range(250, len(all_files)+1,250)):
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")
 
-        print("Iteration of ", i , "to", i-20, ".", i/len(all_files), current_time)
-
-        train = load_files(full_train_folder, description=None, categories=None, load_content=True, shuffle=True,
-                               encoding=None,
-                               decode_error='strict', random_state=0)
-
-        # Loop initialization
-        clf_lgbm = create_lgbm_cl()
-
-        # Retaining the first object's properties then removing it.
-
-        cur_X = train.data[i-20:i]
-        cur_y = train.target[i-20:i]
-        cur_filename = train.filenames[i-20:i]
+            print("Iteration of ", i-250 , "to", i, ".", i/len(all_files), current_time)
 
 
-        for k in range(i-20, i):
-            train.data.pop(i)
-            train.target = np.delete(train.target, i)
+            # Loop initialization
+            clf_lgbm = create_lgbm_cl()
 
-        clf_lgbm.fit(train.data, train.target)
+            # Retaining the first object's properties then removing it.
 
-        # Obtaining results and putting them in the dataframe.
+            cur_X = train.data[i-250:i]
+            random.Random(0).shuffle(cur_X)
 
-        # result_array = []
-        # value_array = []
-        counter = 0
-        for sample in cur_X:
-            sample = [str(sample)]
+            cur_y = train.target[i-250:i]
+            random.Random(0).shuffle(cur_y)
 
-            proba_value = clf_lgbm.predict_proba(sample)
-            proba_result = clf_lgbm.predict(sample)
+            cur_filename = train.filenames[i-250:i]
+            random.Random(0).shuffle(cur_filename)
+
+            train_start = train.data[:i-250]
+            train_end = train.data[i:]
+
+            train_full = train_start + train_end
+
+            target_start = train.target[:i-250]
+            target_end = train.target[i:]
+
+            target_full = np.concatenate((target_start, target_end))
 
 
-            print(cur_y[counter], proba_result)
-            # result_array.append(proba_result)
-            # value_array.append(proba_value)
-            # Putting information in DF.
-            results.loc[len(results.index)] = [cur_filename[counter], cur_y[counter], proba_result[0], proba_value[0][proba_result]]
+            clf_lgbm.fit(train_full, target_full)
 
-            counter = counter + 1
+            # Obtaining results and putting them in the dataframe.
+
+            # result_array = []
+            # value_array = []
+            counter = 0
+            for sample in cur_X:
+                sample = [str(sample)]
+
+                proba_value = clf_lgbm.predict_proba(sample)
+                proba_result = clf_lgbm.predict(sample)
+
+
+               # print(cur_y[counter], proba_result)
+                # result_array.append(proba_result)
+                # value_array.append(proba_value)
+                # Putting information in DF.
+                results.loc[len(results.index)] = [cur_filename[counter], cur_y[counter], proba_result[0], proba_value[0][proba_result]]
+
+                counter = counter + 1
 
 except:
+    print("Failure Occured")
     results.to_csv('failure_catch.csv')
 finally:
     results.to_csv('test3.csv')
