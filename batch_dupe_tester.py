@@ -54,11 +54,11 @@ index = Similarity(corpus=corpus, num_features=len(dictionary), output_prefix='o
 #Parse similarities from index
 doc_id = 0
 
-batch_size = 250  ## Adjust as needed
+batch_size = (len(corpus) + 1) // 4
 
 start_point = 0
 end_point = batch_size
-corpus_splice = corpus[0:5000]
+
 
 threshold = .98 ## change this if you want a stricter/looser definition of similarity
 
@@ -66,10 +66,11 @@ cur_index = start_point
 dupe_set = set()
 root_set = set()
 
-while end_point < len(index):
+while end_point <= len(corpus):
     corpus_splice = corpus[start_point:end_point]
-
-
+    cur_index = start_point
+    print(start_point)
+    print(end_point)
 
     for article_index, percentage_list in enumerate(index[corpus_splice]):
         ## index[corpus_splice] is a list of the percentage that each file is similar to item
@@ -95,18 +96,18 @@ while end_point < len(index):
 
         for dupe in file_col:
             if dupe not in root_set:
-                print(dupe)
-                print(cur_filename, 'root')
                 dupe_set.add(dupe)
 
-    start_point += batch_size
+    start_point = end_point
     end_point += batch_size
 
-print(len(dupe_set))
+
+#print(len(dupe_set))
+#print(len(root_set))
+
 print(len(root_set))
-
-print(dupe_set)
-
+print(len(dupe_set))
+print(len(corpus))
 
 
 
